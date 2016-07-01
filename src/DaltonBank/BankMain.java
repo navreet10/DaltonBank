@@ -113,10 +113,11 @@ public class BankMain {
 	 * Gives summary of transaction
 	 * @param in Scanner
 	 */
-	private static void summary(Scanner in) {
+	public static String summary(Scanner in) {
 		System.out.println("Please enter account num to get specific details "
 				+ "or (0) to get all details");
 		int acc = in.nextInt();
+		String result= "";
 		if (acc == 0) {
 			String query = "SELECT a.no_of_transaction,"
 					+" b.no_of_deposits,"
@@ -154,7 +155,7 @@ public class BankMain {
 			List<String> params = new ArrayList<String>();
 			List<String> types = new ArrayList<String>();
 			Map<Integer, List<String>> map = DBUtility.selectData(query, params, types, "ora1", "ora1");
-			String result= "Total Number of Transactions: " + map.get(1).get(0)
+			result= "Total Number of Transactions: " + map.get(1).get(0)
 					+ "\nNumber of Deposits: " + map.get(1).get(1)
 					+ "\nTotal Deposits: $" + map.get(1).get(2)
 					+ "\nNumber of Withdrawals: " + map.get(1).get(3)
@@ -225,7 +226,7 @@ public class BankMain {
 			types.add(7, "int");
 			types.add(8, "int");
 			Map<Integer, List<String>> map = DBUtility.selectData(query, params, types, "ora1", "ora1");
-			String result= "Name: "+ map.get(1).get(8) + " Account: " + acc 
+			result= "Name: "+ map.get(1).get(8) + " Account: " + acc 
 							+"\nTotal Number of Transactions: " + map.get(1).get(0)
 							+ "\nNumber of Deposits: " + map.get(1).get(1)
 							+ "\nTotal Deposits: $" + map.get(1).get(2)
@@ -236,6 +237,7 @@ public class BankMain {
 							+ "\nNumber of savings accounts: " + map.get(1).get(7);
 			System.out.println(result);
 		}
+		return result;
 
 	}
 	/**
@@ -243,7 +245,7 @@ public class BankMain {
 	 * for the same user
 	 * @param in Scanner
 	 */
-	private static void transferAmount(Scanner in) {
+	public static String transferAmount(Scanner in) {
 		System.out.println("Please enter the account from which to transfer:");
 		int accFrom = in.nextInt();
 		System.out.println("Please enter the account to which to transfer:");
@@ -260,8 +262,8 @@ public class BankMain {
 		types.add(1, "int");
 		Map<Integer, List<String>> map = DBUtility.selectData(query, params, types, "ora1", "ora1");
 		if (map.size() != 2) {
-			System.out.println("Accounts don't belong to the same person");
-			return;
+			System.out.println("Accounts doesn't belong to the same person");
+			return "";
 		}
 
 		query = "Select balance from account where accnum in (?,?)";
@@ -277,7 +279,7 @@ public class BankMain {
 
 		if ((curBalanceFrom - amount) < 0) {
 			System.out.println("Insufficient Balance");
-			return;
+			return "";
 		}
 
 		query = "Update account set balance= ? where accnum = ?";
@@ -290,7 +292,7 @@ public class BankMain {
 		int res = DBUtility.updateData(query, params, types, "ora1", "ora1");
 		if (res == 0) {
 			System.out.println("Balance not updated");
-			return;
+			return "";
 		}
 
 		query = "Update account set balance= ? where accnum = ?";
@@ -304,12 +306,12 @@ public class BankMain {
 		if (res == 0) {
 			System.out.println("Balance not updated");
 		}
-
+		return "success";
 	}
 	/**
 	 * Displays account info
 	 */
-	private static void displayAccounts() {
+	public static String displayAccounts() {
 
 		String query = "Select distinct accnum, balance from account";
 		List<String> params = new ArrayList<String>();
@@ -319,13 +321,14 @@ public class BankMain {
 		for (int i = 1; i < map.keySet().size(); i++) {
 			System.out.println("Account Number: " + map.get(i).get(0) + " Balance: " + map.get(i).get(1));
 		}
-
+		
+		return "success";
 	}
 	/**
 	 * Adds transactions to database
 	 * @param trns
 	 */
-	private static void addTransactions(Transactions trns) {
+	public static String addTransactions(Transactions trns) {
 
 		String query = "Select * from account where accnum= ?";
 		List<String> params = new ArrayList<String>();
@@ -336,7 +339,7 @@ public class BankMain {
 
 		if (map.size() < 2) {
 			System.out.println("Account num does not exist");
-			return;
+			return "Account num does not exist";
 		}
 
 		query = "Select typeid from types where type= ?";
@@ -348,7 +351,7 @@ public class BankMain {
 
 		if (map.size() < 2) {
 			System.out.println("Type Unknown");
-			return;
+			return "Type Unknown";
 		}
 		int typeId = Integer.parseInt(map.get(1).get(0));
 
@@ -368,14 +371,15 @@ public class BankMain {
 		int res = DBUtility.updateData(query, params, types, "ora1", "ora1");
 		if (res == 0) {
 			System.out.println("Row not inserted");
+			return "Row not inserted";
 		}
-
+		return "success";
 	}
-	/**
+	/**https://github.com/navreet10/DaltonBank
 	 * Adds accounts to database
 	 * @param acc
 	 */
-	private static void addAccounts(Account acc) {
+	public static String addAccounts(Account acc) {
 		String query = "Insert into account values(?,?,?,?,?)";
 		List<String> params = new ArrayList<String>();
 		params.add(0, acc.getName());
@@ -392,18 +396,20 @@ public class BankMain {
 		int res = DBUtility.updateData(query, params, types, "ora1", "ora1");
 		if (res == 0) {
 			System.out.println("Row not inserted");
+			return "Row not inserted";
 		}
+		return "success";
 
 	}
 	/**
 	 * Processes transactions
 	 */
-	private static void processTransactions() {
+	public static String processTransactions() {
 		String query = "Select * from transaction where status = 'New' order by curdate";
 		List<String> params = new ArrayList<String>();
 		List<String> types = new ArrayList<String>();
 		Map<Integer, List<String>> map = DBUtility.selectData(query, params, types, "ora1", "ora1");
-
+		String result = "success";
 		for (int i = 1; i < map.keySet().size(); i++) {
 			int accnum = Integer.parseInt(map.get(i).get(2));
 			String type = checkType(Integer.parseInt(map.get(i).get(0)));
@@ -448,6 +454,7 @@ public class BankMain {
 					int res = DBUtility.updateData(query, params, types, "ora1", "ora1");
 					if (res == 0) {
 						System.out.println("Balance not updated");
+						result = "Balance not updated";
 					}
 				}
 			}
@@ -462,6 +469,7 @@ public class BankMain {
 			int res = DBUtility.updateData(query, params, types, "ora1", "ora1");
 			if (res == 0) {
 				System.out.println("Balance not updated");
+				result = "Balance not updated";
 			}
 
 			query = "update transaction set status ='Completed' where transactionID = " + trnsid;
@@ -470,10 +478,11 @@ public class BankMain {
 			res = DBUtility.updateData(query, params, types, "ora1", "ora1");
 			if (res == 0) {
 				System.out.println("Balance not updated");
+				result = "Balance not updated";
 			}
 
 		}
-
+		return result;
 	}
 	/**
 	 * Checks if saving account exist with sufficient balance
@@ -482,7 +491,7 @@ public class BankMain {
 	 * @param name
 	 * @return result in boolean
 	 */
-	private static boolean checkSavingBalance(float newBalance, int accnum, String name) {
+	public static boolean checkSavingBalance(float newBalance, int accnum, String name) {
 		String query = "Select balance,accnum from account where type='S' and name=? and accnum != ?";
 		List<String> params = new ArrayList<String>();
 		params.add(0,name);
@@ -519,7 +528,7 @@ public class BankMain {
  * Updates balance for accounts
  * @param accs
  */
-	private static void updateBalance(Map<Integer, Float> accs) {
+	public static void updateBalance(Map<Integer, Float> accs) {
 		Set<Integer> acc = accs.keySet();
 		for (int i : acc) {
 			String query = "update account set balance = " + accs.get(i) + " where accnum = " + i;
@@ -539,7 +548,7 @@ public class BankMain {
 	 * @param next transaction int
 	 * @return Returns the type of transaction
 	 */
-	private static String checkType(int next) {
+	public static String checkType(int next) {
 		String transactionType = null;
 		switch (next) {
 		case 1:
